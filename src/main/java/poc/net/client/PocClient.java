@@ -1,7 +1,6 @@
 package poc.net.client;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -17,7 +16,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import poc.net.Message;
 import poc.net.Message.Type;
 import poc.net.MessageMapper;
-import poc.net.PocReadTimeoutHandler;
+import poc.net.PocResponseTimeoutHandler;
 
 public class PocClient {
 
@@ -34,11 +33,9 @@ public class PocClient {
 
 	private boolean healthCheckEnabled = true;
 
+	private final PocClientContext clientContext = new PocClientContext();
+
 	private final MessageMapper mapper = new MessageMapper();
-
-	private final BlockingQueue<Message> sysMsgQueue = new SynchronousQueue<>();
-
-	private final BlockingQueue<Message> bizMsgQueue = new SynchronousQueue<>();
 
 	public void setHealthCheckEnabled(boolean healthCheckEnabled) {
 		this.healthCheckEnabled = healthCheckEnabled;
@@ -50,7 +47,7 @@ public class PocClient {
 		Bootstrap b = new Bootstrap();
 		b.group(loopGroup);
 		b.channel(NioSocketChannel.class);
-		b.handler(new PocClientInitializer(sysMsgQueue, bizMsgQueue));
+		b.handler(new PocClientInitializer(clientContext));
 
 		// Make the connection attempt.
 		channel = b.connect(host, port).sync().channel();
@@ -69,16 +66,16 @@ public class PocClient {
 		channel.writeAndFlush(mapper.toString(message)).sync();
 
 		log.debug("Adding read timeout handler");
-		channel.pipeline().addBefore(execGroup, PocClientInboundHandler.class.getSimpleName(), msgTypeStr, new PocReadTimeoutHandler(msgType, REQUEST_TIMEOUT_SEC));
+		channel.pipeline().addBefore(execGroup, PocClientInboundHandler.NAME, msgTypeStr, new PocResponseTimeoutHandler(msgType, REQUEST_TIMEOUT_SEC));
 
 		log.debug("Waiting for response from server");
-		Message res = msgType.equals(Type.SYSTEM) ? sysMsgQueue.take() : bizMsgQueue.take();
+		Optional<Message> optionalRes = msgType.equals(Type.SYSTEM) ? clientContext.sysMsgQueue.take() : clientContext.bizMsgQueue.take();
 
 		log.debug("Removing read timeout handler");
 		channel.pipeline().remove(msgTypeStr);
 
 		log.debug("Returning response to caller");
-		return res;
+		return optionalRes.get();
 	}
 
 	public void stop() throws InterruptedException {

@@ -3,13 +3,13 @@ package poc.net;
 import io.netty.channel.ChannelException;
 import poc.net.Message.Type;
 
-public class PocReadTimeoutException extends ChannelException {
+public class PocResponseTimeoutException extends ChannelException {
 
-	private static final long serialVersionUID = 2145331647435273046L;
+	private static final long serialVersionUID = 1L;
 
 	private final Type type;
 
-	PocReadTimeoutException(Type type) {
+	PocResponseTimeoutException(Type type) {
 		this.type = type;
 	}
 

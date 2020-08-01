@@ -9,9 +9,11 @@ import io.netty.util.ReferenceCountUtil;
 import poc.net.Message;
 import poc.net.Message.Type;
 import poc.net.MessageMapper;
-import poc.net.PocReadTimeoutException;
+import poc.net.PocResponseTimeoutException;
 
 public class PocServerInboundHandler extends ChannelInboundHandlerAdapter {
+
+	public static final String NAME = PocServerInboundHandler.class.getName();
 
 	private final Logger log = LoggerFactory.getLogger(PocServerInboundHandler.class);
 
@@ -50,8 +52,8 @@ public class PocServerInboundHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		if (cause instanceof PocReadTimeoutException) {
-			PocReadTimeoutException e = (PocReadTimeoutException) cause;
+		if (cause instanceof PocResponseTimeoutException) {
+			PocResponseTimeoutException e = (PocResponseTimeoutException) cause;
 			log.info("{} timeout detected", e.getTimeoutType());
 			return;
 		}
