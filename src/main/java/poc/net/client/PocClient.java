@@ -21,13 +21,14 @@ import poc.net.PocResponseTimeoutHandler;
 public class PocClient {
 
 	public static final int HEALTH_CHECK_INTERVAL_SEC = 4;
+
 	public static final int REQUEST_TIMEOUT_SEC = 3;
 
-	private Logger log = LoggerFactory.getLogger(PocClient.class);
+	private final Logger log = LoggerFactory.getLogger(PocClient.class);
 
-	private EventLoopGroup loopGroup;
+	private EventLoopGroup loopGroup = null;
 
-	private EventExecutorGroup execGroup;
+	private EventExecutorGroup execGroup = null;
 
 	private Channel channel = null;
 
@@ -49,7 +50,6 @@ public class PocClient {
 		b.channel(NioSocketChannel.class);
 		b.handler(new PocClientInitializer(clientContext));
 
-		// Make the connection attempt.
 		channel = b.connect(host, port).sync().channel();
 
 		if (healthCheckEnabled) {

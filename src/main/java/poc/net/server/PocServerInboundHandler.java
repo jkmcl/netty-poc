@@ -19,8 +19,11 @@ public class PocServerInboundHandler extends ChannelInboundHandlerAdapter {
 
 	private final PocServerConfig config;
 
-	public PocServerInboundHandler(PocServerConfig config) {
+	private final PocServerContext context;
+
+	public PocServerInboundHandler(PocServerConfig config, PocServerContext context) {
 		this.config = config;
+		this.context = context;
 	}
 
 	@Override
@@ -28,6 +31,8 @@ public class PocServerInboundHandler extends ChannelInboundHandlerAdapter {
 	    try {
 			MessageMapper mapper = new MessageMapper();
 			Message req = mapper.fromString((String) msg);
+
+			context.getMessagesReceived().add(req);
 
 			Type msgType = req.getType();
 			String msgTypeStr = msgType.name();

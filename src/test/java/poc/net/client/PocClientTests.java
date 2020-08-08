@@ -2,6 +2,8 @@ package poc.net.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import static org.awaitility.Awaitility.await;
+
 import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
@@ -60,7 +62,15 @@ class PocClientTests {
 		client.connect("0.0.0.0", 8080);
 
 		log.info("Do nothing and wait for health checks to occur");
-		Thread.sleep(Duration.ofSeconds(10).toMillis());
+
+		await().pollDelay(Duration.ofSeconds(PocClient.HEALTH_CHECK_INTERVAL_SEC + 1)).until(() -> {
+			if (server.getMessagesReceived().isEmpty()) {
+				return false;
+			} else {
+				Message req = server.getMessagesReceived().get(0);
+				return req.getType().equals(Message.Type.SYSTEM) && req.getSubtype().equals(Message.Subtype.REQUEST);
+			}
+		});
 
 		log.info("Stopping client");
 		client.stop();

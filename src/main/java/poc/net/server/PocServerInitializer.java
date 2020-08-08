@@ -12,8 +12,11 @@ public class PocServerInitializer extends ChannelInitializer<SocketChannel> {
 
 	private final PocServerConfig config;
 
-	public PocServerInitializer(PocServerConfig config) {
+	private final PocServerContext context;
+
+	public PocServerInitializer(PocServerConfig config, PocServerContext context) {
 		this.config = config;
+		this.context = context;
 	}
 
 	@Override
@@ -23,7 +26,7 @@ public class PocServerInitializer extends ChannelInitializer<SocketChannel> {
 		p.addLast(ShareableHandlers.STRING_DECODER);
 		p.addLast(ShareableHandlers.STRING_ENCODER);
 		p.addLast(new LoggingHandler("ServerLoggingHandler"));
-		p.addLast(PocServerInboundHandler.NAME, new PocServerInboundHandler(config));
+		p.addLast(PocServerInboundHandler.NAME, new PocServerInboundHandler(config, context));
 	}
 
 }
